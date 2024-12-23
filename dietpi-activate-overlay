@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# DietPi device tree overlay activation program
+# used to setup existing overlays in /boot/dtb/<chip>/overlay/
+#
+# based upon armbian-add-overlay
+
+# Copyright (c) 2017 The Armbian Project https://www.armbian.com/
+#
+# This file is licensed under the terms of the GNU General Public
+# License version 2. This program is licensed "as is" without any
+# warranty of any kind, whether express or implied.
+
+if [[ ! -n $1 ]]; then
+	echo >&2 "Usage: $0 <overlay_name>"
+	exit -1
+fi
+
+if [[ $EUID -ne 0 ]]; then
+	echo >&2 "This program must be run with superuser rights"
+	exit -1
+fi
+
+if [[ ! -f /boot/dietpiEnv.txt ]]; then
+	echo >&2 "DietPi is not installed properly. Missing dietpiEnv.txt"
+	exit -1
+fi
+
+if ! grep -q '^setenv overlay_error' /boot/boot.cmd; then
+	echo >&2 "Overlays are not supported on ${LINUXFAMILY^} based boards."
+	exit -1
+fi
+
+overlay=$1
+
+if grep -q '^overlays=' /boot/dietpiEnv.txt; then
+	line=$(grep '^overlays=' /boot/dietpiEnv.txt | cut -d'=' -f2)
+	if grep -qE "(^|[[:space:]])${overlay}([[:space:]]|$)" <<< $line; then
+		echo "Overlay ${overlay} was already added to /boot/dietpiEnv.txt, skipping"
+		exit 0
+	elif grep -q '^overlays=\s*$' /boot/dietpiEnv.txt; then
+		sed -i -e "s/^overlays=\s*$/overlays=${overlay}/" /boot/dietpiEnv.txt
+	else
+		sed -i -e "/^overlays=/ s/$/ ${overlay}/" /boot/dietpiEnv.txt
+	fi
+else
+	sed -i -e "\$aoverlays=${overlay}" /boot/dietpiEnv.txt
+fi
+
+echo "Reboot is required to apply the changes"

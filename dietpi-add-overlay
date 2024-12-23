@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# DietPi device tree overlay program
+# based upon armbian-add-overlay
+
+# Copyright (c) 2017 The Armbian Project https://www.armbian.com/
+#
+# This file is licensed under the terms of the GNU General Public
+# License version 2. This program is licensed "as is" without any
+# warranty of any kind, whether express or implied.
+
+if [[ ! -n $1 ]]; then
+	echo >&2 "Usage: $0 <overlay_file.dtbo>"
+	exit -1
+fi
+
+if [[ $EUID -ne 0 ]]; then
+	echo >&2 "This program must be run with superuser rights"
+	exit -1
+fi
+
+if [[ ! -f $1 ]]; then
+	echo >&2 "Can't open file $1. File does not exist?"
+	exit -1
+fi
+
+if [[ ! -f /boot/dietpiEnv.txt ]]; then
+	echo >&2 "DietPi is not installed properly. Missing dietpiEnv.txt"
+	exit -1
+fi
+
+if ! grep -q '^setenv overlay_error' /boot/boot.cmd; then
+	echo >&2 "Overlays are not supported on ${LINUXFAMILY^} based boards."
+	exit -1
+fi
+
+if [[ $1 == *.dtbo ]]; then
+	fname=$(basename $1 .dtbo)
+	echo "Copying the compiled overlay file to /boot/overlay-user/"
+	[ -d /boot/overlay-user ] || mkdir -p /boot/overlay-user
+	cp ${1} /boot/overlay-user/${1}
+
+	if grep -q '^user_overlays=' /boot/dietpiEnv.txt; then
+		line=$(grep '^user_overlays=' /boot/dietpiEnv.txt | cut -d'=' -f2)
+		if grep -qE "(^|[[:space:]])${fname}([[:space:]]|$)" <<< $line; then
+			echo "Overlay ${fname} was already added to /boot/dietpiEnv.txt, skipping"
+		elif grep -q '^user_overlays=\s*$' /boot/dietpiEnv.txt; then
+			sed -i -e "s/^user_overlays=\s*$/user_overlays=${fname}/" /boot/dietpiEnv.txt
+		else
+			sed -i -e "/^user_overlays=/ s/$/ ${fname}/" /boot/dietpiEnv.txt
+		fi
+	else
+		sed -i -e "\$auser_overlays=${fname}" /boot/dietpiEnv.txt
+	fi
+
+	echo "Reboot is required to apply the changes"
+else
+	echo >&2 "Overlay file name should have the .dtbo extension"
+	exit -1
+fi
