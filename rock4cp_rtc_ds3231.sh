@@ -2,8 +2,9 @@
 #
 # Setup script for Rock 4 C+ board: install RTC DS3231 device tree overlay
 
-REPO=${REPO:-herrfrei}
-BRANCH=${BRANCH:-dietpi-rock4cp}
+USER=${USER:-herrfrei}
+REPO=${REPO:-dietpi-rock4cp}
+BRANCH=${BRANCH:-main}
 
 function download {
   SRC=$1
@@ -32,7 +33,7 @@ fi
 
 # activate i2c7
 echo "Activating overlay rk3399-i2c7"
-check_or_install_script https://raw.githubusercontent.com/${REPO}/teslausb/${BRANCH}/setup/dietpi/dietpi-activate-overlay
+check_or_install_script https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/dietpi-activate-overlay
 /boot/dietpi/dietpi-activate-overlay rk3399-i2c7
 
 OVERLAY=rk3399-i2c7-ds3231
@@ -46,11 +47,30 @@ fi
 
 # download and install RTC clock device tree file
 DOWNLOAD_FILE=${OVERLAY}.dtbo
-download https://raw.githubusercontent.com/${REPO}/teslausb/${BRANCH}/setup/rock4cp/${DOWNLOAD_FILE} ${DOWNLOAD_FILE}
-check_or_install_script https://raw.githubusercontent.com/${REPO}/teslausb/${BRANCH}/setup/dietpi/dietpi-add-overlay
+download https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/${DOWNLOAD_FILE} ${DOWNLOAD_FILE}
+check_or_install_script https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/dietpi-add-overlay
 /boot/dietpi/dietpi-add-overlay ${DOWNLOAD_FILE}
 rm -f ${DOWNLOAD_FILE}
 
 echo "Disabling fake-hwclock"
 systemctl stop fake-hwclock 
 systemctl disable fake-hwclock
+
+echo "Create hwclock service"
+cat <<- EOF > /lib/systemd/system/hwclock.service
+[Unit]
+Description=Hardware clock synchronization
+DefaultDependencies=no
+After=mutable.mount
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/hwclock --hctosys --utc --adjfile=/var/tmp/adjtime
+ExecStop=/sbin/hwclock --systohc --utc --adjfile=/var/tmp/adjtime
+
+[Install]
+WantedBy=sysinit.target
+EOF
+
+systemctl unmask hwclock
+systemctl enable hwclock

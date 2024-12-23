@@ -2,8 +2,9 @@
 #
 # Setup script for Rock 4 C+ board: install USB OTG peripheral mode device tree overlay
 
-REPO=${REPO:-herrfrei}
-BRANCH=${BRANCH:-dietpi-rock4cp}
+USER=${USER:-herrfrei}
+REPO=${REPO:-dietpi-rock4cp}
+BRANCH=${BRANCH:-main}
 
 function download {
   SRC=$1
@@ -41,7 +42,7 @@ fi
 
 # download and install USB OTG device tree file
 DOWNLOAD_FILE=${OVERLAY}.dtbo
-download https://raw.githubusercontent.com/${REPO}/teslausb/${BRANCH}/setup/rock4cp/${DOWNLOAD_FILE} ${DOWNLOAD_FILE}
-check_or_install_script https://raw.githubusercontent.com/${REPO}/teslausb/${BRANCH}/setup/dietpi/dietpi-add-overlay
+download https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/${DOWNLOAD_FILE} ${DOWNLOAD_FILE}
+check_or_install_script https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/dietpi-add-overlay
 /boot/dietpi/dietpi-add-overlay ${DOWNLOAD_FILE}
 rm -f ${DOWNLOAD_FILE}
