@@ -2,8 +2,8 @@
 #
 # Setup script for Rock 4 C+ board: install USB OTG peripheral mode device tree overlay
 
-USER=${USER:-herrfrei}
-REPO=${REPO:-dietpi-rock4cp}
+GH_USER=${GH_USER:-herrfrei}
+GH_REPO=${GH_REPO:-dietpi-rpk4cp}
 BRANCH=${BRANCH:-main}
 
 function download {
@@ -19,7 +19,7 @@ function download {
 function check_or_install_script {
   URL=$1
   SCRIPT_FILE=$(basename $1)
-  if [ ! -x ${SCRIPT_FILE} ]
+  if [ ! -x /boot/dietpi/${SCRIPT_FILE} ]
   then
     download ${URL} /boot/dietpi/${SCRIPT_FILE}
     chmod +x /boot/dietpi/${SCRIPT_FILE}
@@ -28,6 +28,11 @@ function check_or_install_script {
 
 if [[ $EUID -ne 0 ]]; then
   echo >&2 "This program must be run with superuser rights"
+  exit -1
+fi
+
+if [ ! -d /boot/dietpi ]; then
+  echo >&2 "This program only works on DietPI distribution (missing /boot/dietpi directory)"
   exit -1
 fi
 
@@ -42,7 +47,7 @@ fi
 
 # download and install USB OTG device tree file
 DOWNLOAD_FILE=${OVERLAY}.dtbo
-download https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/${DOWNLOAD_FILE} ${DOWNLOAD_FILE}
-check_or_install_script https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/dietpi-add-overlay
+download https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/${BRANCH}/${DOWNLOAD_FILE} ${DOWNLOAD_FILE}
+check_or_install_script https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/${BRANCH}/dietpi-add-overlay
 /boot/dietpi/dietpi-add-overlay ${DOWNLOAD_FILE}
 rm -f ${DOWNLOAD_FILE}

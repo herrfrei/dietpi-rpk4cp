@@ -2,8 +2,8 @@
 #
 # Setup script for Rock 4 C+ board: install RTC DS3231 device tree overlay
 
-USER=${USER:-herrfrei}
-REPO=${REPO:-dietpi-rock4cp}
+GH_USER=${GH_USER:-herrfrei}
+GH_REPO=${GH_REPO:-dietpi-rpk4cp}
 BRANCH=${BRANCH:-main}
 
 function download {
@@ -19,7 +19,7 @@ function download {
 function check_or_install_script {
   URL=$1
   SCRIPT_FILE=$(basename $1)
-  if [ ! -x ${SCRIPT_FILE} ]
+  if [ ! -x /boot/dietpi/${SCRIPT_FILE} ]
   then
     download ${URL} /boot/dietpi/${SCRIPT_FILE}
     chmod +x /boot/dietpi/${SCRIPT_FILE}
@@ -31,9 +31,14 @@ if [[ $EUID -ne 0 ]]; then
   exit -1
 fi
 
+if [ ! -d /boot/dietpi ]; then
+  echo >&2 "This program only works on DietPI distribution (missing /boot/dietpi directory)"
+  exit -1
+fi
+
 # activate i2c7
 echo "Activating overlay rk3399-i2c7"
-check_or_install_script https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/dietpi-activate-overlay
+check_or_install_script https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/${BRANCH}/dietpi-activate-overlay
 /boot/dietpi/dietpi-activate-overlay rk3399-i2c7
 
 OVERLAY=rk3399-i2c7-ds3231
@@ -47,8 +52,8 @@ fi
 
 # download and install RTC clock device tree file
 DOWNLOAD_FILE=${OVERLAY}.dtbo
-download https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/${DOWNLOAD_FILE} ${DOWNLOAD_FILE}
-check_or_install_script https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/dietpi-add-overlay
+download https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/${BRANCH}/${DOWNLOAD_FILE} ${DOWNLOAD_FILE}
+check_or_install_script https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/${BRANCH}/dietpi-add-overlay
 /boot/dietpi/dietpi-add-overlay ${DOWNLOAD_FILE}
 rm -f ${DOWNLOAD_FILE}
 
