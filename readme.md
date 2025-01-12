@@ -30,6 +30,17 @@ These are scripts to activate overlays:
     curl https://raw.githubusercontent.com/herrfrei/dietpi-rock4cp/rock4cp_bluetooth_fw.sh | bash
     ```
     
+- connect a fan: 
+
+  - use a 5V fan and the connector near the USB 2 connector
+  
+    ![](images/rock-4cp-connectors.jpg)
+  - ensure that thermal-governor is set to `step_wise` (the fan works only at temperatures above 60 degrees Celsius)
+    `cat /sys/class/thermal/thermal_zone0/policy` 
+    
+    If not, set it:
+    `echo step_wise > /sys/class/thermal/thermal_zone0/policy`
+  
 ## Installation of teslausb
 
 - Install the device tree overlay for USB OTG from above (`rock4cp_usb_otg.sh`).
