@@ -11,13 +11,13 @@ These are scripts to activate overlays:
 
 - install device tree overlay for USB OTG (peripheral mode) for the upper USB 3 connector
     ```shell
-    curl https://raw.githubusercontent.com/herrfrei/dietpi-rpk4cp/rock4cp_usb_otg.sh | bash
+    curl https://raw.githubusercontent.com/herrfrei/dietpi-rpk4cp/master/rock4cp_usb_otg.sh | bash
     ```
 
 - Install device tree overlay for the DS3231 realtime clock:
 
     ```shell
-    curl https://raw.githubusercontent.com/herrfrei/dietpi-rock4cp/rock4cp_rtc_ds3231.sh | bash
+    curl https://raw.githubusercontent.com/herrfrei/dietpi-rpk4cp/master/rock4cp_rtc_ds3231.sh | bash
     ```
 
   This script also stops and deactivates the fake-hwclock service.
@@ -27,7 +27,7 @@ These are scripts to activate overlays:
 - use `rock4cp_bluetooth_fw.sh` to create the (missing) link for the Bluetooth firmware:
 
     ```shell
-    curl https://raw.githubusercontent.com/herrfrei/dietpi-rock4cp/rock4cp_bluetooth_fw.sh | bash
+    curl https://raw.githubusercontent.com/herrfrei/dietpi-rpk4cp/master/rock4cp_wifi_bt_fw.sh | bash
     ```
     
 - connect a fan: 
