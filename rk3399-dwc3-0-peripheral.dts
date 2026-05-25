@@ -15,4 +15,5 @@ Use this when you want to connect to another computer.";
 &usbdrd_dwc3_0 {
 	status = "okay";
 	dr_mode = "peripheral";
+	maximum-speed = "super-speed";
 };
