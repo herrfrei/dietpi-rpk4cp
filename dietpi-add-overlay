@@ -29,11 +29,6 @@ if [[ ! -f /boot/dietpiEnv.txt ]]; then
 	exit -1
 fi
 
-if ! grep -q '^setenv overlay_error' /boot/dietpiEnv.txt; then
-	echo >&2 "Overlays are not supported on ${LINUXFAMILY^} based boards."
-	exit -1
-fi
-
 if [[ $1 == *.dtbo ]]; then
 	fname=$(basename $1 .dtbo)
 	echo "Copying the compiled overlay file to /boot/overlay-user/"
