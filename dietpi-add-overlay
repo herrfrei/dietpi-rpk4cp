@@ -29,7 +29,7 @@ if [[ ! -f /boot/dietpiEnv.txt ]]; then
 	exit -1
 fi
 
-if ! grep -q '^setenv overlay_error' /boot/boot.cmd; then
+if ! grep -q '^setenv overlay_error' /boot/dietpiEnv.txt; then
 	echo >&2 "Overlays are not supported on ${LINUXFAMILY^} based boards."
 	exit -1
 fi
