@@ -1,55 +1,48 @@
 #!/bin/bash
 
-# DietPi device tree overlay program
-# based upon armbian-add-overlay
+set -Eeuo pipefail
 
-# Copyright (c) 2017 The Armbian Project https://www.armbian.com/
+trap 'echo >&2 "ERROR: Script failed at line ${LINENO}"' ERR
+
 #
-# This file is licensed under the terms of the GNU General Public
-# License version 2. This program is licensed "as is" without any
-# warranty of any kind, whether express or implied.
+# DietPi device tree overlay installation utility
+# Based on armbian-add-overlay
+#
 
-if [[ ! -n $1 ]]; then
-	echo >&2 "Usage: $0 <overlay_file.dtbo>"
-	exit -1
+BOOT_DIR="${BOOT_DIR:-/boot}"
+ENV_FILE="${BOOT_DIR}/dietpiEnv.txt"
+
+# Validate arguments before touching anything
+if [[ $# -ne 2 ]]; then
+    echo >&2 "Usage: $0 <key_name> <overlay_name>"
+    echo >&2 "   eg: $0 user_overlays rk3399-dwc3-0-peripheral"
+    exit 1
 fi
 
-if [[ $EUID -ne 0 ]]; then
-	echo >&2 "This program must be run with superuser rights"
-	exit -1
-fi
+KEY_NAME="$1"
+OVERLAY_NAME="$2"
 
-if [[ ! -f $1 ]]; then
-	echo >&2 "Can't open file $1. File does not exist?"
-	exit -1
-fi
+# Backup after validation
+cp "${ENV_FILE}" "${ENV_FILE}.bak"
 
-if [[ ! -f /boot/dietpiEnv.txt ]]; then
-	echo >&2 "DietPi is not installed properly. Missing dietpiEnv.txt"
-	exit -1
-fi
+# Escape overlay name for safe use in sed patterns
+OVERLAY_ESCAPED=$(printf '%s\n' "${OVERLAY_NAME}" | sed 's/[[\.*^$()+?{|]/\\&/g')
 
-if [[ $1 == *.dtbo ]]; then
-	fname=$(basename $1 .dtbo)
-	echo "Copying the compiled overlay file to /boot/overlay-user/"
-	[ -d /boot/overlay-user ] || mkdir -p /boot/overlay-user
-	cp ${1} /boot/overlay-user/${1}
-
-	if grep -q '^user_overlays=' /boot/dietpiEnv.txt; then
-		line=$(grep '^user_overlays=' /boot/dietpiEnv.txt | cut -d'=' -f2)
-		if grep -qE "(^|[[:space:]])${fname}([[:space:]]|$)" <<< $line; then
-			echo "Overlay ${fname} was already added to /boot/dietpiEnv.txt, skipping"
-		elif grep -q '^user_overlays=\s*$' /boot/dietpiEnv.txt; then
-			sed -i -e "s/^user_overlays=\s*$/user_overlays=${fname}/" /boot/dietpiEnv.txt
-		else
-			sed -i -e "/^user_overlays=/ s/$/ ${fname}/" /boot/dietpiEnv.txt
-		fi
-	else
-		sed -i -e "\$auser_overlays=${fname}" /boot/dietpiEnv.txt
-	fi
-
-	echo "Reboot is required to apply the changes"
+if grep -q "^${KEY_NAME}=" "${ENV_FILE}"; then
+    line="$(grep "^${KEY_NAME}=" "${ENV_FILE}" | cut -d'=' -f2)"
+    if grep -qE "(^|[[:space:]])${OVERLAY_ESCAPED}([[:space:]]|$)" <<< "${line}"; then
+        echo "Overlay ${OVERLAY_NAME} is already configured"
+    elif grep -q "^${KEY_NAME}=[[:space:]]*$" "${ENV_FILE}"; then
+        sed -i "s/^${KEY_NAME}=[[:space:]]*$/${KEY_NAME}=${OVERLAY_ESCAPED}/" "${ENV_FILE}"
+        echo "Added ${OVERLAY_NAME} to ${KEY_NAME}"
+    else
+        sed -i "/^${KEY_NAME}=/ s/$/ ${OVERLAY_ESCAPED}/" "${ENV_FILE}"
+        echo "Added ${OVERLAY_NAME} to ${KEY_NAME}"
+    fi
 else
-	echo >&2 "Overlay file name should have the .dtbo extension"
-	exit -1
+    echo "${KEY_NAME}=${OVERLAY_NAME}" >> "${ENV_FILE}"
+    echo "Created ${KEY_NAME} entry"
 fi
+
+echo "Overlay installation completed successfully"
+echo "A reboot is required to apply the changes"
