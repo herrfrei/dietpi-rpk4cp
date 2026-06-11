@@ -173,7 +173,7 @@ echo "[\$(date)] rock4cp-fancontrol-setup starting"
 # ---- Detect pwm-fan hwmon device ----------------------------------------
 FAN_HWMON=""
 for d in /sys/class/hwmon/hwmon*; do
-    if [[ "\$(cat "\${d}/name" 2>/dev/null)" == "pwm_fan" ]]; then
+    if [[ "\$(cat "\${d}/name" 2>/dev/null)" == "pwmfan" ]]; then
         FAN_HWMON=\$(basename "\${d}")
         break
     fi
